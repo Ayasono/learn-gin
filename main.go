@@ -7,11 +7,45 @@ import (
 )
 
 func main() {
-  r := gin.Default()
-  r.GET("/ping", func(c *gin.Context) {
+  server := gin.Default()
+
+  type userInfo struct {
+    Name     string `json:"name"`
+    Password string `json:"password"`
+  }
+
+  var users []userInfo
+
+  server.GET("/user", func(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{
-      "message": "pong",
+      "users": users,
     })
   })
-  r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+
+  server.POST("/user", func(c *gin.Context) {
+    userName := c.Query("name")
+    userPassword := c.Query("password")
+
+    users = append(users, userInfo{Name: userName, Password: userPassword})
+
+    c.JSON(http.StatusOK, gin.H{
+      "message": "User added successfully",
+      "users":   users,
+    })
+  })
+
+  server.POST("/json", func(c *gin.Context) {
+    var jsonData map[string]interface{}
+
+    // 使用c.BindJSON来解析请求体到一个map中
+    if err := c.BindJSON(&jsonData); err != nil {
+      c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+      return
+    }
+
+    // 遍历map，并返回所有键值对
+    c.JSON(http.StatusOK, jsonData)
+  })
+
+  server.Run(":8080")
 }

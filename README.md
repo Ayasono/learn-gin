@@ -45,3 +45,13 @@ func middleware(c *gin.Context) {
 }
 
 ```
+
+#### read request body
+
+```go
+c.Query("key") // read query string
+c.PostForm("key") // read form data
+c.Param("key")    // read path parameter
+c.ShouldBindJSON(&data) // read json data
+
+```

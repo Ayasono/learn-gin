@@ -1,7 +1,6 @@
 package main
 
 import (
-  "encoding/json"
   "net/http"
 
   "github.com/gin-gonic/gin"
@@ -36,13 +35,16 @@ func main() {
   })
 
   server.POST("/json", func(c *gin.Context) {
-    b, _ := c.GetRawData()
-
     jsonData := make(map[string]interface{})
 
-    _ = json.Unmarshal(b, &jsonData)
+    if err := c.BindJSON(&jsonData); err != nil {
+      c.JSON(http.StatusBadRequest, gin.H{
+        "message": "Invalid JSON format",
+      })
+      return
+    }
 
-    c.JSON(http.StatusOK, gin.H{
+    c.IndentedJSON(http.StatusOK, gin.H{
       "msg":   "ok",
       "value": jsonData["test"],
     })

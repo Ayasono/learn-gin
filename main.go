@@ -1,6 +1,7 @@
 package main
 
 import (
+  "encoding/json"
   "net/http"
 
   "github.com/gin-gonic/gin"
@@ -35,16 +36,54 @@ func main() {
   })
 
   server.POST("/json", func(c *gin.Context) {
-    var jsonData map[string]interface{}
+    b, _ := c.GetRawData()
 
-    // 使用c.BindJSON来解析请求体到一个map中
-    if err := c.BindJSON(&jsonData); err != nil {
-      c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-      return
+    jsonData := make(map[string]interface{})
+
+    _ = json.Unmarshal(b, &jsonData)
+
+    c.JSON(http.StatusOK, gin.H{
+      "msg":   "ok",
+      "value": jsonData["test"],
+    })
+  })
+
+  server.GET("/user/:name", func(c *gin.Context) {
+    name := c.Param("name")
+
+    for _, user := range users {
+      if user.Name == name {
+        c.JSON(http.StatusOK, gin.H{
+          "user": user,
+        })
+        return
+      }
     }
 
-    // 遍历map，并返回所有键值对
-    c.JSON(http.StatusOK, jsonData)
+    c.JSON(http.StatusNotFound, gin.H{
+      "message": "User not found",
+    })
+  })
+
+  orderGroup := server.Group("/order")
+  {
+    orderGroup.GET("/list", func(c *gin.Context) {
+      c.JSON(http.StatusOK, gin.H{
+        "orders": "list",
+      })
+
+    })
+    orderGroup.GET("/detail", func(c *gin.Context) {
+      c.JSON(http.StatusOK, gin.H{
+        "orders": "detail",
+      })
+    })
+  }
+
+  server.NoRoute(func(c *gin.Context) {
+    c.JSON(http.StatusNotFound, gin.H{
+      "message": "Not found",
+    })
   })
 
   server.Run(":8080")
